@@ -92,7 +92,7 @@
     .modal {
       position: fixed;
       right: 8px;
-      bottom: 8px;
+      bottom: calc(8px - env(safe-area-inset-bottom, 0px));
       left: 8px;
       overflow: hidden;
       padding: 8px;
@@ -173,7 +173,7 @@
   <main class="screen">
     <p class="eyebrow">Border radius demo</p>
     <h1>Модалка повторяет скругление экрана</h1>
-    <p class="description">Модалка находится строго в 8px от левого, правого и нижнего края. Safe area не влияет на её позицию.</p>
+    <p class="description">Модалка визуально опущена до 8px от физического нижнего края экрана.</p>
     <button class="open-button" id="openButton">Открыть модалку</button>
 
     <div class="backdrop" id="backdrop"></div>
@@ -186,7 +186,7 @@
       <div class="modal__inner">
         <div class="handle"></div>
         <h2>Отступ ровно 8px</h2>
-        <p>Safe area используется только для приблизительного вычисления радиуса, но не сдвигает модалку вверх.</p>
+        <p>Safari поднимает нижнюю границу viewport, поэтому safe area вычитается из bottom.</p>
 
         <div class="metrics">
           <div class="metric"><span>Safe bottom</span><strong id="safeBottom">—</strong></div>
