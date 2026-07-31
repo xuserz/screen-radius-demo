@@ -8,14 +8,39 @@
   <style>
     :root {
       color-scheme: dark;
+
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-right: env(safe-area-inset-right, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
       --safe-left: env(safe-area-inset-left, 0px);
-      --safe-max: max(var(--safe-top), var(--safe-right), var(--safe-bottom), var(--safe-left));
-      --screen-radius: clamp(0px, calc(var(--safe-max) * 1.45 + 1.5vw), 60px);
+
+      /* В портретном режиме нижняя safe-area лучше всего отражает скругление. */
+      --corner-safe: var(--safe-bottom);
+
+      /*
+       * iPhone 12: 34px × 1.25 + 1vw ≈ 46.4px.
+       * На устройствах без safe-area остаётся аккуратный базовый радиус.
+       */
+      --screen-radius: clamp(
+        22px,
+        calc(var(--corner-safe) * 1.25 + 1vw),
+        52px
+      );
+
       --modal-gap: 8px;
-      --modal-radius: max(20px, calc(var(--screen-radius) - var(--modal-gap)));
+
+      /* Радиус внутренней параллельной линии: внешний радиус минус отступ. */
+      --modal-radius: max(
+        16px,
+        calc(var(--screen-radius) - var(--modal-gap))
+      );
+    }
+
+    @media (orientation: landscape) {
+      :root {
+        /* В альбомном режиме скругление лучше отражают боковые safe-area. */
+        --corner-safe: max(var(--safe-left), var(--safe-right));
+      }
     }
 
     * { box-sizing: border-box; }
@@ -28,7 +53,10 @@
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
     }
 
-    body { min-height: 100svh; overflow: hidden; }
+    body {
+      min-height: 100svh;
+      overflow: hidden;
+    }
 
     .screen {
       min-height: 100svh;
@@ -108,7 +136,7 @@
 
     .modal__inner {
       padding: 18px;
-      border-radius: max(14px, calc(var(--modal-radius) - 8px));
+      border-radius: max(10px, calc(var(--modal-radius) - 8px));
       background: rgba(255,255,255,.055);
     }
 
@@ -136,7 +164,13 @@
       background: rgba(0,0,0,.19);
     }
 
-    .metric span { display: block; margin-bottom: 4px; color: rgba(255,255,255,.45); font-size: 12px; }
+    .metric span {
+      display: block;
+      margin-bottom: 4px;
+      color: rgba(255,255,255,.45);
+      font-size: 12px;
+    }
+
     .metric strong { font-size: 16px; }
 
     .close-button {
@@ -158,39 +192,42 @@
     .modal.hidden { transform: translateY(24px) scale(.98); }
 
     @media (min-width: 700px) {
-      :root { --screen-radius: 32px; }
       .modal {
         right: 50%;
         left: auto;
         width: min(440px, calc(100vw - 16px));
         transform: translateX(50%);
       }
-      .modal.hidden { transform: translateX(50%) translateY(24px) scale(.98); }
+
+      .modal.hidden {
+        transform: translateX(50%) translateY(24px) scale(.98);
+      }
     }
   </style>
 </head>
 <body>
   <main class="screen">
     <p class="eyebrow">Border radius demo</p>
-    <h1>Модалка повторяет скругление экрана</h1>
-    <p class="description">Модалка визуально опущена до 8px от физического нижнего края экрана.</p>
+    <h1>Адаптивное скругление модалки</h1>
+    <p class="description">В портретном режиме формула использует нижнюю safe-area, а в альбомном — боковые значения. На устройствах без safe-area применяется безопасный базовый радиус.</p>
     <button class="open-button" id="openButton">Открыть модалку</button>
 
     <div class="backdrop" id="backdrop"></div>
 
     <div class="measure" id="measureSafeBottom" style="width:var(--safe-bottom)"></div>
+    <div class="measure" id="measureCornerSafe" style="width:var(--corner-safe)"></div>
     <div class="measure" id="measureScreenRadius" style="width:var(--screen-radius)"></div>
     <div class="measure" id="measureModalRadius" style="width:var(--modal-radius)"></div>
 
     <section class="modal" id="modal" role="dialog" aria-modal="true">
       <div class="modal__inner">
         <div class="handle"></div>
-        <h2>Отступ ровно 8px</h2>
-        <p>Safari поднимает нижнюю границу viewport, поэтому safe area вычитается из bottom.</p>
+        <h2>Новая формула</h2>
+        <p>Для iPhone 12 ожидаемый радиус модалки — примерно 38px вместо прежних 52px.</p>
 
         <div class="metrics">
           <div class="metric"><span>Safe bottom</span><strong id="safeBottom">—</strong></div>
-          <div class="metric"><span>Отступ модалки</span><strong>8px</strong></div>
+          <div class="metric"><span>Corner safe</span><strong id="cornerSafe">—</strong></div>
           <div class="metric"><span>Радиус экрана</span><strong id="screenRadius">—</strong></div>
           <div class="metric"><span>Радиус модалки</span><strong id="modalRadius">—</strong></div>
         </div>
@@ -208,6 +245,7 @@
 
     function updateMetrics() {
       document.querySelector('#safeBottom').textContent = width('#measureSafeBottom');
+      document.querySelector('#cornerSafe').textContent = width('#measureCornerSafe');
       document.querySelector('#screenRadius').textContent = width('#measureScreenRadius');
       document.querySelector('#modalRadius').textContent = width('#measureModalRadius');
     }
